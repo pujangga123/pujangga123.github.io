@@ -139,6 +139,7 @@ ssm,sesama
 sy,saya
 tdk,tidak
 th,Tuhan
+thd,terhadap
 tj,tanggung jawab
 tp,tapi
 ttp,tetapi
