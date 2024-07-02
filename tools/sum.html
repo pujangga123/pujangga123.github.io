@@ -46,8 +46,8 @@
         let data = $("#data").val()
 
         //Clean Data
-        data = data.replace(".","");
-        data = data.replace(",","");
+        data = data.replaceAll(".","");
+        data = data.replaceAll(",","");
 
         // hapus karanter non numerik
         const reg = /[^\d]/g;
