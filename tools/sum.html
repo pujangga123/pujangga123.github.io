@@ -46,9 +46,14 @@
         let data = $("#data").val()
 
         //Clean Data
-        const reg = /[^\d\.]/g;
+        data = data.replace(".","");
+        data = data.replace(",","");
+
+        // hapus karanter non numerik
+        const reg = /[^\d]/g;
         data = data.replace(reg,"\n");
 
+        // delete double line
         while(data.search("\n\n")>=0){
             data = data.replace("\n\n","\n");
         }
