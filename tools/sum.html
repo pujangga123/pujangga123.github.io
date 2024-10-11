@@ -50,7 +50,7 @@
         data = data.replaceAll(",","");
 
         // hapus karanter non numerik
-        const reg = /[^\d]/g;
+        const reg = /[^(\d-)]/g;
         data = data.replace(reg,"\n");
 
         // delete double line
@@ -78,6 +78,7 @@
         alert(`- Paste number separated with new line.
 - Any non-character will be converted to new line.
 - Double space will be removed
+- negatif value is supported
 - "," and "." will be removed, decimal number not supported`);
     }
 </script>   
