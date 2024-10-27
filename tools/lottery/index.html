@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lottery Pick</title>
+    <script src="anime/lib/anime.min.js"></script>
+
+    <style>
+        body {
+            background-size: cover;
+        }
+
+        #wrapper {
+            overflow: hidden;
+            border: 1px solid black;
+            border-radius: 10px;
+            margin:auto;
+        }
+
+        #dummyLine {
+            visibility:hidden;
+            font-size: 2em;;
+        }
+
+        .listPicked {
+            position: relative;
+            text-align: center;
+            font-size:2em;
+            cursor: pointer;
+        }
+
+        .buttonInit {
+            width: 70px;
+            height: 70px;
+            opacity: 0.9;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- INIT -->
+    <div id="panelInit">
+        <label for="">Data</label><br>
+        <textarea name="data" id="data" style="width:500px; height:400px" title="data, separated by 'newline'"></textarea>
+        <br>
+        <label>Line Count</label>
+        <input id="linecount" type="number" value="1" title="number of line for each item"><br>
+        
+        <label for="">Duration</label>
+        <input type="text" id="duration" value="10000" title="animation duration"><br>
+
+        <label for="">N data for animation</label>
+        <input type="text" id="nPicked" value="100" title="number of data to animate"><br>
+
+        <label for="">Font Size</label>
+        <select id="fontSize">
+            <option value="1em">1em</option>
+            <option value="1.5em">1.5em</option>
+            <option value="2em">2em</option>
+            <option value="2.5em">2.5em</option>
+            <option value="3em">3em</option>
+            <option value="3.5em">3.5em</option>
+            <option value="4em">4em</option>
+        </select><br>
+
+        <label for="">Top Margin</label>
+        <input type="text" value="100px" id="topMargin"><br>
+
+        <label for="">Roller Width</label>
+        <input type="text" value="90%" id="rollerWidth"><br>
+
+        <label for="">Image URL</label>
+        <input type="text" id="imageURL" value="bg1.jpg"><br>
+
+        <label for="">Color</label>
+        <input type="text" id="textColor" value="black"><br>
+
+        <button type="button" id="buttonBegin">BEGIN</button>
+    </div>
+
+    <!-- PICK -->
+    <div id="panelLottery" style="display:none">
+        <div type="button" id="buttonInit">⚙</div>
+        <div id="wrapper" >
+            <div id="listPicked" class="listPicked"></div>
+        </div>
+
+    </div>
+    <div id="dummyLine" ></div>
+</body>
+
+<script>
+    //CONST
+    const nPicked = document.getElementById('nPicked').value * 1;
+    const duration = document.getElementById('duration').value * 1;
+
+    var buttonBegin = document.getElementById('buttonBegin');
+    buttonBegin.addEventListener("click", buttonBeginClick);
+
+    var buttonInit = document.getElementById('buttonInit');
+    buttonInit.addEventListener('click', showPanelInit);
+
+    var data = document.getElementById('data');
+    var wrapper = document.getElementById('wrapper');
+    var panelInit = document.getElementById('panelInit');
+    var panelLottery = document.getElementById('panelLottery');
+    var dummyLine = document.getElementById('dummyLine');
+    var listPicked = document.getElementById('listPicked');
+
+    var fontSize = document.getElementById('fontSize');
+    var topMargin = document.getElementById('topMargin');
+    var rollerWidth = document.getElementById('rollerWidth');
+    var imageURL = document.getElementById('imageURL');
+    var linecount = document.getElementById('linecount');
+    var textColor = document.getElementById('textColor');
+
+    var arrData; // data in array
+    var arrPicked; // data picked
+    var lineHeight = 0;
+    var listPickedTop = 0;
+
+    function buttonBeginClick() {
+        const template = "???";
+        let blankline = "";
+        for(var i=0; i<=linecount.value;i++) {
+            blankline = blankline+template;
+            if(i<linecount.value) {
+                blankline = blankline + "<br>";
+            }
+        }
+
+        panelLottery.style.display = 'block';
+        panelInit.style.display = 'none';
+        wrapper.style.marginTop = topMargin.value;
+        wrapper.style.width = rollerWidth.value;
+        listPicked.style.fontSize = fontSize.value;
+        listPicked.style.color = textColor.value;
+        dummyLine.innerHTML = blankline;
+        dummyLine.style.fontSize = fontSize.value;
+
+        document.getElementsByTagName('body')[0].style.backgroundImage = 'url('+imageURL.value+')';
+
+        arrData = data.value.split("\n");
+        reset();
+    }
+
+    function showPanelInit() {
+        panelInit.style.display = "block";
+        panelLottery.style.display = "none";
+    }
+
+    function animate() {
+        anime({targets:'.listPicked', 
+            translateY: distanceY, 
+            easing: 'easeInOutSine',
+            duration: duration
+        });
+        listPicked.removeEventListener('click', animate);
+        listPicked.addEventListener('click', reset);
+    }
+
+    function reset() {
+        // text to array
+        shuffle(arrData);
+        arrPicked = arrData.slice(0, nPicked);
+
+        htmlPicked = arrPicked.join("<br>");
+        listPicked.innerHTML = dummyLine.innerHTML+"<br>"+htmlPicked;
+
+        //get line height
+        lineHeight = dummyLine.clientHeight;
+        wrapper.style.height = lineHeight+'px';
+        distanceY = -listPicked.clientHeight + lineHeight;
+
+        anime({targets:'.listPicked', 
+            translateY: 0, 
+            duration: 1000
+        });
+        listPicked.removeEventListener('click', reset);
+        listPicked.addEventListener('click', animate);
+
+    }
+
+    // ref: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+    function shuffle(array) {
+        let currentIndex = array.length;
+
+        // While there remain elements to shuffle...
+        while (currentIndex != 0) {
+
+            // Pick a remaining element...
+            let randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+
+            // And swap it with the current element.
+            [array[currentIndex], array[randomIndex]] = [
+                array[randomIndex], array[currentIndex]];
+        }
+    }
+
+</script>
+
+</html>
