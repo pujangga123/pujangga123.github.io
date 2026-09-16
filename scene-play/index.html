@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene Play</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden; 
+        }
+
+        body {
+            background-image: url('assets/1.jpg');
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover; 
+            transition: background-image 0.3s ease-in-out;
+            cursor: default; 
+        }
+
+        .dynamic-img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); 
+            pointer-events: none; 
+        }
+    </style>
+</head>
+<body>
+
+    <script>
+        const trackingImages = new Set();
+
+        function updateCursor() {
+            if (trackingImages.size > 0) {
+                document.body.style.cursor = 'none';
+            } else {
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+            
+            // 1. Check for Escape key to drop whatever is currently following the mouse
+            if (event.key === 'Escape') {
+                trackingImages.clear();
+                updateCursor();
+                return; // Stop processing further
+            }
+
+            const key = event.key.toLowerCase();
+
+            // 2. Background image switch (Numbers 0-9)
+            if (key >= '0' && key <= '9') {
+                document.body.style.backgroundImage = "url('assets/" + key + ".jpg')";
+                return; 
+            } 
+            
+            // 3. Letters logic (a-z)
+            if (key >= 'a' && key <= 'z' && key.length === 1) {
+                
+                const imgId = 'img_' + key;
+                let imgEl = document.getElementById(imgId);
+
+                // Shift + [Letter] -> Toggle visibility
+                if (event.shiftKey) {
+                    
+                    if (!imgEl) {
+                        imgEl = document.createElement('img');
+                        imgEl.src = 'assets/' + key + '.png';
+                        imgEl.id = imgId;
+                        imgEl.className = 'dynamic-img';
+                        imgEl.style.display = 'none';
+                        document.body.appendChild(imgEl);
+                    }
+
+                    if (imgEl.style.display === 'none') {
+                        imgEl.style.display = 'block';
+                    } else {
+                        imgEl.style.display = 'none';
+                        
+                        if (trackingImages.has(key)) {
+                            trackingImages.delete(key);
+                            updateCursor();
+                        }
+                    }
+                } 
+                // Just [Letter] -> Toggle mouse following
+                else {
+                    
+                    if (imgEl && imgEl.style.display !== 'none') {
+                        
+                        // If THIS image is already following, stop it (toggle off)
+                        if (trackingImages.has(key)) {
+                            trackingImages.delete(key);
+                        } 
+                        // If it's not following, start it
+                        else {
+                            // Release any previously moving images first
+                            trackingImages.clear(); 
+                            
+                            // Then add the new one
+                            trackingImages.add(key);
+                        }
+                        
+                        updateCursor();
+                    }
+                }
+            }
+        });
+
+        // 4. Update image positions when the mouse moves
+        document.addEventListener('mousemove', function(event) {
+            trackingImages.forEach(key => {
+                const imgEl = document.getElementById('img_' + key);
+                if (imgEl) {
+                    imgEl.style.left = event.clientX + 'px';
+                    imgEl.style.top = event.clientY + 'px';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
