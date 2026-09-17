@@ -36,6 +36,10 @@
 
     <script>
         const trackingImages = new Set();
+        
+        // Keep track of the mouse's last known position at all times
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
 
         function updateCursor() {
             if (trackingImages.size > 0) {
@@ -47,28 +51,77 @@
 
         document.addEventListener('keydown', function(event) {
             
-            // 1. Check for Escape key to drop whatever is currently following the mouse
+            // 1. Escape key to drop whatever is currently following the mouse
             if (event.key === 'Escape') {
                 trackingImages.clear();
                 updateCursor();
-                return; // Stop processing further
+                return;
+            }
+
+            // 2. Shrink all images when "-" is pressed
+            if (event.key === '-') {
+                const images = document.querySelectorAll('.dynamic-img');
+                images.forEach(img => {
+                    let currentHeight = img.style.height ? parseInt(img.style.height) : img.naturalHeight;
+                    
+                    if (currentHeight > 20) {
+                        img.style.height = (currentHeight - 20) + 'px';
+                        img.style.width = 'auto'; 
+                    }
+                });
+                return;
+            }
+
+            // 3. Grow all images when "+" (or "=" without shift) is pressed
+            if (event.key === '+' || event.key === '=') {
+                const images = document.querySelectorAll('.dynamic-img');
+                images.forEach(img => {
+                    let currentHeight = img.style.height ? parseInt(img.style.height) : img.naturalHeight;
+                    
+                    img.style.height = (currentHeight + 20) + 'px';
+                    img.style.width = 'auto'; 
+                });
+                return;
+            }
+
+            // 4. Flip the currently tracking image(s) when "/" is pressed
+            if (event.key === '/') {
+                if (trackingImages.size > 0) {
+                    trackingImages.forEach(key => {
+                        const imgEl = document.getElementById('img_' + key);
+                        if (imgEl) {
+                            // Read our custom 'data-flipped' attribute to know the current state
+                            const isFlipped = imgEl.dataset.flipped === 'true';
+                            
+                            if (isFlipped) {
+                                // Revert to normal (keep the centering translate!)
+                                imgEl.style.transform = 'translate(-50%, -50%) scaleX(1)';
+                                imgEl.dataset.flipped = 'false';
+                            } else {
+                                // Flip horizontally
+                                imgEl.style.transform = 'translate(-50%, -50%) scaleX(-1)';
+                                imgEl.dataset.flipped = 'true';
+                            }
+                        }
+                    });
+                }
+                return;
             }
 
             const key = event.key.toLowerCase();
 
-            // 2. Background image switch (Numbers 0-9)
+            // 5. Background image switch (Numbers 0-9)
             if (key >= '0' && key <= '9') {
                 document.body.style.backgroundImage = "url('assets/" + key + ".jpg')";
                 return; 
             } 
             
-            // 3. Letters logic (a-z)
+            // 6. Letters logic (a-z)
             if (key >= 'a' && key <= 'z' && key.length === 1) {
                 
                 const imgId = 'img_' + key;
                 let imgEl = document.getElementById(imgId);
 
-                // Shift + [Letter] -> Toggle visibility
                 if (event.shiftKey) {
                     
                     if (!imgEl) {
@@ -77,6 +130,8 @@
                         imgEl.id = imgId;
                         imgEl.className = 'dynamic-img';
                         imgEl.style.display = 'none';
+                        // Initialize custom flip attribute
+                        imgEl.dataset.flipped = 'false'; 
                         document.body.appendChild(imgEl);
                     }
 
@@ -91,22 +146,19 @@
                         }
                     }
                 } 
-                // Just [Letter] -> Toggle mouse following
                 else {
-                    
                     if (imgEl && imgEl.style.display !== 'none') {
                         
-                        // If THIS image is already following, stop it (toggle off)
                         if (trackingImages.has(key)) {
                             trackingImages.delete(key);
                         } 
-                        // If it's not following, start it
                         else {
-                            // Release any previously moving images first
                             trackingImages.clear(); 
-                            
-                            // Then add the new one
                             trackingImages.add(key);
+                            
+                            // Instantly teleport the image to the cursor's current location
+                            imgEl.style.left = mouseX + 'px';
+                            imgEl.style.top = mouseY + 'px';
                         }
                         
                         updateCursor();
@@ -115,13 +167,17 @@
             }
         });
 
-        // 4. Update image positions when the mouse moves
         document.addEventListener('mousemove', function(event) {
+            // Always update our background tracking of the mouse coordinates
+            mouseX = event.clientX;
+            mouseY = event.clientY;
+
+            // Move any images that are currently tracking
             trackingImages.forEach(key => {
                 const imgEl = document.getElementById('img_' + key);
                 if (imgEl) {
-                    imgEl.style.left = event.clientX + 'px';
-                    imgEl.style.top = event.clientY + 'px';
+                    imgEl.style.left = mouseX + 'px';
+                    imgEl.style.top = mouseY + 'px';
                 }
             });
         });
