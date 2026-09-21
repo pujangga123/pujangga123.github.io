@@ -93,15 +93,12 @@
         // Keep track of the mouse's last known position at all times
         let mouseX = window.innerWidth / 2;
         let mouseY = window.innerHeight / 2;
-<<<<<<< Updated upstream
-=======
 
         // --- NEW: Variables for dragging ---
         let isDragging = false;
         let draggedImgEl = null;
         let dragOffsetX = 0;
         let dragOffsetY = 0;
->>>>>>> Stashed changes
 
         function updateCursor() {
             // First, make all images interactable
@@ -208,17 +205,9 @@
                             const isFlipped = imgEl.dataset.flipped === 'true';
                             
                             if (isFlipped) {
-<<<<<<< Updated upstream
-                                // Revert to normal (keep the centering translate!)
                                 imgEl.style.transform = 'translate(-50%, -50%) scaleX(1)';
                                 imgEl.dataset.flipped = 'false';
                             } else {
-                                // Flip horizontally
-=======
-                                imgEl.style.transform = 'translate(-50%, -50%) scaleX(1)';
-                                imgEl.dataset.flipped = 'false';
-                            } else {
->>>>>>> Stashed changes
                                 imgEl.style.transform = 'translate(-50%, -50%) scaleX(-1)';
                                 imgEl.dataset.flipped = 'true';
                             }
@@ -294,11 +283,7 @@
             mouseX = event.clientX;
             mouseY = event.clientY;
 
-<<<<<<< Updated upstream
-            // Move any images that are currently tracking
-=======
             // Move any images that are currently tracking (Keyboard tracking mode)
->>>>>>> Stashed changes
             trackingImages.forEach(key => {
                 const imgEl = document.getElementById('img_' + key);
                 if (imgEl) {
