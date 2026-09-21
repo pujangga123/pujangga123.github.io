@@ -28,11 +28,64 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%); 
-            pointer-events: none; 
+            /* NEW: Allowed mouse events so we can drag them! */
+            cursor: grab; 
+            user-select: none; /* Prevents accidentally highlighting the image */
+        }
+
+        .dynamic-img:active {
+            cursor: grabbing; /* Shows a closed hand when actively clicking/dragging */
+        }
+
+        /* --- Floating Toolbar Styles --- */
+        #toolbar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6); 
+            padding: 10px;
+            border-radius: 12px;
+            display: flex;
+            gap: 10px;
+            z-index: 9999; 
+        }
+
+        .icon-btn {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            background-color: transparent;
+            background-position: center;
+            background-size: contain; 
+            background-repeat: no-repeat;
+            cursor: pointer;
+            transition: transform 0.1s ease, border-color 0.1s ease;
+        }
+
+        .icon-btn:hover {
+            transform: scale(1.1); 
+            border-color: #00ffcc;
+        }
+        
+        /* Apply the specific icons to the buttons */
+        #buttonA {
+            background-image: url('assets/a.png');
+        }
+        #buttonS {
+            background-image: url('assets/s.png');
         }
     </style>
 </head>
 <body>
+
+    <!-- Floating Toolbar -->
+    <div id="toolbar">
+        <button id="buttonA" class="icon-btn" title="Toggle Image A (Shift+A)"></button>
+        <!-- Added button S -->
+        <button id="buttonS" class="icon-btn" title="Toggle Image S (Shift+S)"></button>
+    </div>
 
     <script>
         const trackingImages = new Set();
@@ -40,14 +93,75 @@
         // Keep track of the mouse's last known position at all times
         let mouseX = window.innerWidth / 2;
         let mouseY = window.innerHeight / 2;
+<<<<<<< Updated upstream
+=======
+
+        // --- NEW: Variables for dragging ---
+        let isDragging = false;
+        let draggedImgEl = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+>>>>>>> Stashed changes
 
         function updateCursor() {
+            // First, make all images interactable
+            document.querySelectorAll('.dynamic-img').forEach(img => {
+                img.style.pointerEvents = 'auto';
+            });
+
             if (trackingImages.size > 0) {
                 document.body.style.cursor = 'none';
+                // If an image is tracking the mouse, make it ignore mouse events so it doesn't glitch the invisible cursor
+                trackingImages.forEach(key => {
+                    const imgEl = document.getElementById('img_' + key);
+                    if (imgEl) imgEl.style.pointerEvents = 'none';
+                });
             } else {
                 document.body.style.cursor = 'default';
             }
         }
+
+        // --- NEW: Mouse Down (Start Dragging) ---
+        document.addEventListener('mousedown', function(event) {
+            // Check if what we clicked is a dynamic image
+            if (event.target.classList.contains('dynamic-img')) {
+                isDragging = true;
+                draggedImgEl = event.target;
+                
+                // Calculate exactly where on the image we clicked so it doesn't snap abruptly
+                const rect = draggedImgEl.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                dragOffsetX = event.clientX - centerX;
+                dragOffsetY = event.clientY - centerY;
+            }
+        });
+
+        // --- NEW: Mouse Up (Stop Dragging) ---
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+            draggedImgEl = null;
+        });
+
+        // --- Toolbar Button A Click Listener (Shift + a) ---
+        document.getElementById('buttonA').addEventListener('click', function(e) {
+            this.blur(); 
+            document.dispatchEvent(new KeyboardEvent('keydown', { 
+                key: 'a', 
+                shiftKey: true 
+            }));
+        });
+
+        // --- Toolbar Button S Click Listener (Shift + s) ---
+        document.getElementById('buttonS').addEventListener('click', function(e) {
+            this.blur(); 
+            // Dispatch a fake keyboard event simulating "Shift + s"
+            document.dispatchEvent(new KeyboardEvent('keydown', { 
+                key: 's', 
+                shiftKey: true 
+            }));
+        });
 
         document.addEventListener('keydown', function(event) {
             
@@ -94,11 +208,17 @@
                             const isFlipped = imgEl.dataset.flipped === 'true';
                             
                             if (isFlipped) {
+<<<<<<< Updated upstream
                                 // Revert to normal (keep the centering translate!)
                                 imgEl.style.transform = 'translate(-50%, -50%) scaleX(1)';
                                 imgEl.dataset.flipped = 'false';
                             } else {
                                 // Flip horizontally
+=======
+                                imgEl.style.transform = 'translate(-50%, -50%) scaleX(1)';
+                                imgEl.dataset.flipped = 'false';
+                            } else {
+>>>>>>> Stashed changes
                                 imgEl.style.transform = 'translate(-50%, -50%) scaleX(-1)';
                                 imgEl.dataset.flipped = 'true';
                             }
@@ -129,6 +249,8 @@
                         imgEl.src = 'assets/' + key + '.png';
                         imgEl.id = imgId;
                         imgEl.className = 'dynamic-img';
+                        // --- NEW: Disables browser's default ghost dragging ---
+                        imgEl.draggable = false; 
                         imgEl.style.display = 'none';
                         // Initialize custom flip attribute
                         imgEl.dataset.flipped = 'false'; 
@@ -172,7 +294,11 @@
             mouseX = event.clientX;
             mouseY = event.clientY;
 
+<<<<<<< Updated upstream
             // Move any images that are currently tracking
+=======
+            // Move any images that are currently tracking (Keyboard tracking mode)
+>>>>>>> Stashed changes
             trackingImages.forEach(key => {
                 const imgEl = document.getElementById('img_' + key);
                 if (imgEl) {
@@ -180,6 +306,12 @@
                     imgEl.style.top = mouseY + 'px';
                 }
             });
+
+            // --- NEW: Update positions for physically Dragged images ---
+            if (isDragging && draggedImgEl) {
+                draggedImgEl.style.left = (mouseX - dragOffsetX) + 'px';
+                draggedImgEl.style.top = (mouseY - dragOffsetY) + 'px';
+            }
         });
     </script>
 </body>
